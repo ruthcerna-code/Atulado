@@ -1,0 +1,6 @@
+{
+  "name": "A Tu Lado",
+  "description": "Aplicación de acompañamiento, psicoeducación y apoyo emocional en salud mental perinatal por Dominga Care.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
