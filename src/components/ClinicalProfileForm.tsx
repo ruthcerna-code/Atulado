@@ -31,10 +31,25 @@ export const ClinicalProfileForm: React.FC<ClinicalProfileFormProps> = ({
   const [contraceptiveMethod, setContraceptiveMethod] = useState(
     initialData?.contraceptiveMethod || 'Ninguno / Ciclo Natural'
   );
+  const [diagnosedDisease, setDiagnosedDisease] = useState(
+    initialData?.diagnosedDisease || ''
+  );
+  const [medications, setMedications] = useState(
+    initialData?.medications || ''
+  );
+  const [medicationDurationValue, setMedicationDurationValue] = useState<number | string>(
+    initialData?.medicationDurationValue ?? ''
+  );
+  const [medicationDurationUnit, setMedicationDurationUnit] = useState<'días' | 'meses'>(
+    initialData?.medicationDurationUnit || 'meses'
+  );
 
   const defaultConditions = ['Celíaca', 'Diabetes', 'Obesidad', 'Depresión'];
   const [selectedConditions, setSelectedConditions] = useState<string[]>(
     initialData?.healthConditions || ['Diabetes', 'Obesidad']
+  );
+  const [otherHealthConditions, setOtherHealthConditions] = useState<string>(
+    initialData?.otherHealthConditions || ''
   );
 
   const [isSuccess, setIsSuccess] = useState(false);
@@ -59,6 +74,11 @@ export const ClinicalProfileForm: React.FC<ClinicalProfileFormProps> = ({
       cycleDurationDays: Number(cycleDurationDays) || 0,
       contraceptiveMethod: contraceptiveMethod.trim(),
       healthConditions: selectedConditions,
+      otherHealthConditions: otherHealthConditions.trim(),
+      diagnosedDisease: diagnosedDisease.trim().slice(0, 150),
+      medications: medications.trim(),
+      medicationDurationValue: medicationDurationValue ? Number(medicationDurationValue) : undefined,
+      medicationDurationUnit,
     };
     onSave(data);
     setIsSuccess(true);
@@ -201,9 +221,69 @@ export const ClinicalProfileForm: React.FC<ClinicalProfileFormProps> = ({
             />
           </div>
 
-          {/* Grid Row 4: Condiciones de Salud */}
+          {/* Campo: Enfermedad diagnosticada (Texto largo, máx 150 caracteres) */}
           <div>
-            <label className="sans text-xs font-bold text-[#2D2D2D] block mb-2">
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="sans text-xs font-bold text-[#2D2D2D]">
+                Enfermedad diagnosticada
+              </label>
+              <span className={`sans text-[10px] font-semibold ${diagnosedDisease.length >= 150 ? 'text-rose-600' : 'text-[#5A5A40]/70'}`}>
+                {diagnosedDisease.length} / 150 caracteres
+              </span>
+            </div>
+            <textarea
+              maxLength={150}
+              rows={3}
+              value={diagnosedDisease}
+              onChange={(e) => setDiagnosedDisease(e.target.value)}
+              placeholder="Describe cualquier enfermedad o diagnóstico médico relevante (máx. 150 caracteres)..."
+              className="w-full px-4 py-3 rounded-2xl bg-[#F9F8F3] border border-[#5A5A40]/15 text-xs text-[#2D2D2D] focus:outline-hidden focus:border-[#5A5A40] focus:bg-white transition-all resize-none leading-relaxed"
+            />
+          </div>
+
+          {/* Sección de Medicamentos y Tiempo de Uso (días o meses) */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-7">
+              <label className="sans text-xs font-bold text-[#2D2D2D] block mb-1.5">
+                Medicamentos
+              </label>
+              <input
+                type="text"
+                value={medications}
+                onChange={(e) => setMedications(e.target.value)}
+                placeholder="Ej: Levotiroxina 50mcg, Sertralina"
+                className="w-full px-4 py-3 rounded-2xl bg-[#F9F8F3] border border-[#5A5A40]/15 text-xs text-[#2D2D2D] focus:outline-hidden focus:border-[#5A5A40] focus:bg-white transition-all"
+              />
+            </div>
+
+            <div className="sm:col-span-5">
+              <label className="sans text-xs font-bold text-[#2D2D2D] block mb-1.5">
+                Tiempo de uso
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={medicationDurationValue}
+                  onChange={(e) => setMedicationDurationValue(e.target.value)}
+                  placeholder="3"
+                  className="w-24 px-3 py-3 rounded-2xl bg-[#F9F8F3] border border-[#5A5A40]/15 text-xs text-[#2D2D2D] focus:outline-hidden focus:border-[#5A5A40] focus:bg-white transition-all text-center font-medium"
+                />
+                <select
+                  value={medicationDurationUnit}
+                  onChange={(e) => setMedicationDurationUnit(e.target.value as 'días' | 'meses')}
+                  className="flex-1 px-3 py-3 rounded-2xl bg-[#F9F8F3] border border-[#5A5A40]/15 text-xs text-[#2D2D2D] focus:outline-hidden focus:border-[#5A5A40] focus:bg-white transition-all font-semibold"
+                >
+                  <option value="días">días</option>
+                  <option value="meses">meses</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Row 4: Condiciones de Salud */}
+          <div className="space-y-3">
+            <label className="sans text-xs font-bold text-[#2D2D2D] block mb-1">
               Condiciones de Salud
             </label>
             <div className="flex flex-wrap gap-3">
@@ -233,6 +313,20 @@ export const ClinicalProfileForm: React.FC<ClinicalProfileFormProps> = ({
                   </button>
                 );
               })}
+            </div>
+
+            {/* Campo adicional para otros tipos de condiciones de salud */}
+            <div className="pt-2">
+              <label className="sans text-xs font-bold text-[#2D2D2D] block mb-1.5">
+                Otras condiciones de salud / Especificación
+              </label>
+              <input
+                type="text"
+                value={otherHealthConditions}
+                onChange={(e) => setOtherHealthConditions(e.target.value)}
+                placeholder="Ej: Hipotiroidismo, Hipertensión arterial, Alergia severa, etc."
+                className="w-full px-4 py-3 rounded-2xl bg-[#F9F8F3] border border-[#5A5A40]/15 text-xs text-[#2D2D2D] focus:outline-hidden focus:border-[#5A5A40] focus:bg-white transition-all"
+              />
             </div>
           </div>
 

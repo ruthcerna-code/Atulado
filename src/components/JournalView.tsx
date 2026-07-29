@@ -42,12 +42,13 @@ export const JournalView: React.FC<JournalViewProps> = ({
   ];
 
   const moodEmojis: Record<MoodType, { emoji: string; label: string }> = {
-    radiant: { emoji: '😊', label: 'Radiante' },
-    calm: { emoji: '😐', label: 'En Calma' },
-    neutral: { emoji: '😶', label: 'Neutral' },
-    sad: { emoji: '😔', label: 'Triste' },
-    anxious: { emoji: '😰', label: 'Ansiosa' },
-    overwhelmed: { emoji: '😢', label: 'Abrumada' }
+    angry: { emoji: '😡', label: 'Enojada' },
+    guilty: { emoji: '😔', label: 'Culposa' },
+    trapped: { emoji: '🚪', label: 'Sin salida' },
+    sad: { emoji: '😢', label: 'Triste' },
+    overwhelmed: { emoji: '😣', label: 'Abrumada' },
+    calm: { emoji: '😌', label: 'En calma' },
+    anxious: { emoji: '😰', label: 'Ansiosa' }
   };
 
   const toggleTag = (tag: string) => {

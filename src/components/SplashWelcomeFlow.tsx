@@ -65,7 +65,7 @@ export const SplashWelcomeFlow: React.FC<SplashWelcomeFlowProps> = ({ onComplete
           <div className="w-20 h-20 rounded-full bg-[#5A5A40] flex items-center justify-center shadow-lg mb-6 animate-pulse">
             <Heart className="w-10 h-10 fill-[#E8DCC4] text-[#E8DCC4]" />
           </div>
-          <h1 className="serif text-3xl font-bold text-[#5A5A40] tracking-tight mb-2">A TU LADO</h1>
+          <h1 className="serif text-3xl font-bold text-[#5A5A40] tracking-tight mb-2">A TU LADO HOY</h1>
           <p className="sans text-xs tracking-widest text-[#5A5A40]/70 uppercase font-semibold">
             Dominga Care • Salud Mental Perinatal
           </p>
@@ -81,7 +81,7 @@ export const SplashWelcomeFlow: React.FC<SplashWelcomeFlowProps> = ({ onComplete
               <Heart className="w-5 h-5 fill-[#E8DCC4]" />
             </div>
             <div>
-              <span className="serif text-xl font-bold text-[#5A5A40]">A TU LADO</span>
+              <span className="serif text-xl font-bold text-[#5A5A40]">A TU LADO HOY</span>
               <p className="sans text-[11px] text-[#5A5A40]/70">Un espacio de escucha y calma</p>
             </div>
           </div>

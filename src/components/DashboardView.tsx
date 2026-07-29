@@ -1,15 +1,17 @@
 import React from 'react';
 import { Play, Sparkles, BookOpen, ClipboardList, AlertCircle, Phone, ArrowRight, Heart, Calendar, Activity } from 'lucide-react';
-import { UserProfile, MoodType, JournalEntry, EpdsResult } from '../types';
+import { UserProfile, MoodType, JournalEntry, EpdsResult, Gad7Result } from '../types';
 
 interface DashboardViewProps {
   userProfile: UserProfile;
   recentEntries: JournalEntry[];
   latestEpds?: EpdsResult;
+  latestGad7?: Gad7Result;
   onQuickMoodCheckin: (mood: MoodType) => void;
   onOpenBreathing: () => void;
   onNavigateTab: (tab: 'journal' | 'community' | 'resources') => void;
   onOpenEpdsTest: () => void;
+  onOpenGad7Test: () => void;
   onOpenSos: () => void;
   onOpenClinicalProfile?: () => void;
 }
@@ -18,10 +20,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   userProfile,
   recentEntries,
   latestEpds,
+  latestGad7,
   onQuickMoodCheckin,
   onOpenBreathing,
   onNavigateTab,
   onOpenEpdsTest,
+  onOpenGad7Test,
   onOpenSos,
   onOpenClinicalProfile
 }) => {
@@ -41,17 +45,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   ];
   const todayQuote = dailyQuotes[new Date().getDay() % dailyQuotes.length];
 
-  // Quick mood options
+  // Quick mood options matching the 7 official emotional states
   const moodOptions: { type: MoodType; emoji: string; label: string }[] = [
-    { type: 'radiant', emoji: '😊', label: 'Radiante' },
-    { type: 'calm', emoji: '😐', label: 'En Calma' },
-    { type: 'sad', emoji: '😔', label: 'Triste' },
-    { type: 'anxious', emoji: '😢', label: 'Abrumada' }
+    { type: 'angry', emoji: '😡', label: 'Enojada' },
+    { type: 'guilty', emoji: '😔', label: 'Culposa' },
+    { type: 'trapped', emoji: '🚪', label: 'Sin salida' },
+    { type: 'sad', emoji: '😢', label: 'Triste' },
+    { type: 'overwhelmed', emoji: '😣', label: 'Abrumada' },
+    { type: 'calm', emoji: '😌', label: 'En calma' },
+    { type: 'anxious', emoji: '😰', label: 'Ansiosa' }
   ];
 
-  // Weekly evolution dummy/live calculation
-  const daysOfWeek = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-  const moodHeights = [40, 60, 30, 80, 50, 45, 20];
+  // Weekly evolution live calculation & mock data structured by day
+  const weeklyData = [
+    { day: 'Lun', label: 'Lunes', date: '21 Jul', score: 85, mood: 'calm' as MoodType, emoji: '😌', moodLabel: 'En calma', color: 'bg-emerald-600', textColor: 'text-emerald-700' },
+    { day: 'Mar', label: 'Martes', date: '22 Jul', score: 45, mood: 'anxious' as MoodType, emoji: '😰', moodLabel: 'Ansiosa', color: 'bg-orange-500', textColor: 'text-orange-700' },
+    { day: 'Mié', label: 'Miércoles', date: '23 Jul', score: 35, mood: 'trapped' as MoodType, emoji: '🚪', moodLabel: 'Sin salida', color: 'bg-rose-500', textColor: 'text-rose-700' },
+    { day: 'Jue', label: 'Jueves', date: '24 Jul', score: 90, mood: 'calm' as MoodType, emoji: '😌', moodLabel: 'En calma', color: 'bg-emerald-600', textColor: 'text-emerald-700' },
+    { day: 'Vie', label: 'Viernes', date: '25 Jul', score: 60, mood: 'guilty' as MoodType, emoji: '😔', moodLabel: 'Culposa', color: 'bg-amber-500', textColor: 'text-amber-700' },
+    { day: 'Sáb', label: 'Sábado', date: '26 Jul', score: 75, mood: 'calm' as MoodType, emoji: '😌', moodLabel: 'En calma', color: 'bg-teal-600', textColor: 'text-teal-700' },
+    { day: 'Dom', label: 'Domingo', date: '27 Jul', score: 80, mood: 'calm' as MoodType, emoji: '😌', moodLabel: 'En calma', color: 'bg-emerald-600', textColor: 'text-emerald-700' }
+  ];
+
+  const averageScore = Math.round(
+    weeklyData.reduce((acc, curr) => acc + curr.score, 0) / weeklyData.length
+  );
 
   return (
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
@@ -93,6 +111,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
               <p className="text-[#5A5A40]/80 mt-0.5 text-[11px]">
                 Última regla: <span className="font-semibold">{userProfile.clinicalProfile.lastPeriodStartDate}</span> • Ciclo: {userProfile.clinicalProfile.cycleDurationDays} días
+                {userProfile.clinicalProfile.diagnosedDisease && (
+                  <span className="block text-[10px] text-[#5A5A40]/90 font-medium truncate max-w-xs mt-0.5">
+                    Diagnóstico: {userProfile.clinicalProfile.diagnosedDisease}
+                  </span>
+                )}
+                {userProfile.clinicalProfile.medications && (
+                  <span className="block text-[10px] text-[#5A5A40]/90 font-medium truncate max-w-xs mt-0.5">
+                    Meds: {userProfile.clinicalProfile.medications} ({userProfile.clinicalProfile.medicationDurationValue} {userProfile.clinicalProfile.medicationDurationUnit || 'meses'})
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -188,7 +216,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Quick Action Shortcuts */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={() => onNavigateTab('journal')}
           className="p-4 rounded-2xl bg-white border border-[#5A5A40]/10 hover:border-[#5A5A40]/30 transition-all text-left shadow-2xs group flex flex-col justify-between"
@@ -211,59 +239,182 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <div>
             <div className="sans text-xs font-bold uppercase tracking-wider text-[#2D2D2D]">Test EPDS</div>
-            <div className="sans text-[10px] text-[#5A5A40]/70 mt-0.5">Evaluación clínica Edimburgo</div>
+            <div className="sans text-[10px] text-[#5A5A40]/70 mt-0.5">Depresión Perinatal</div>
+          </div>
+        </button>
+
+        <button
+          onClick={onOpenGad7Test}
+          className="p-4 rounded-2xl bg-white border border-[#5A5A40]/10 hover:border-[#5A5A40]/30 transition-all text-left shadow-2xs group flex flex-col justify-between"
+        >
+          <div className="w-9 h-9 rounded-xl bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] mb-2 group-hover:scale-105 transition-transform">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="sans text-xs font-bold uppercase tracking-wider text-[#2D2D2D]">Test GAD-7</div>
+            <div className="sans text-[10px] text-[#5A5A40]/70 mt-0.5">Ansiedad Generalizada</div>
           </div>
         </button>
       </div>
 
-      {/* Latest EPDS Result Widget if evaluated */}
-      {latestEpds && (
-        <div className="p-4 rounded-2xl bg-white border border-[#5A5A40]/15 shadow-2xs flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40]">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="sans text-xs font-bold text-[#2D2D2D]">Última Evaluación EPDS</div>
-              <div className="sans text-[11px] text-[#5A5A40]">
-                Puntaje: {latestEpds.totalScore}/30 • {latestEpds.dateStr}
+      {/* Latest Test Results Widgets */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {latestEpds && (
+          <div className="p-4 rounded-2xl bg-white border border-[#5A5A40]/15 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] shrink-0">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="sans text-xs font-bold text-[#2D2D2D]">Último Test EPDS</div>
+                <div className="sans text-[11px] text-[#5A5A40]">
+                  Puntaje: <span className="font-bold">{latestEpds.totalScore}/30</span> • {latestEpds.dateStr}
+                </div>
               </div>
             </div>
+            <button
+              onClick={onOpenEpdsTest}
+              className="text-xs font-bold text-[#5A5A40] hover:underline flex items-center gap-1 shrink-0"
+            >
+              Ver
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <button
-            onClick={onOpenEpdsTest}
-            className="text-xs font-bold text-[#5A5A40] hover:underline flex items-center gap-1"
-          >
-            Ver
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+        )}
 
-      {/* Weekly Mood Bar Chart */}
-      <div className="p-5 rounded-3xl border border-[#5A5A40]/10 bg-white shadow-2xs">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="serif text-sm font-bold text-[#5A5A40]">Evolución Semanal de Bienestar</h3>
-          <span className="sans text-[10px] uppercase tracking-widest text-[#5A5A40]/60 font-semibold">
-            {recentEntries.length} entradas
-          </span>
-        </div>
-        <div className="flex items-end gap-2 h-20 pt-2 border-b border-[#5A5A40]/10">
-          {daysOfWeek.map((day, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-              <div
-                style={{ height: `${moodHeights[idx]}%` }}
-                className={`w-full rounded-t-lg transition-all ${
-                  idx === 3 ? 'bg-[#5A5A40]' : 'bg-[#5A5A40]/25'
-                }`}
-              />
+        {latestGad7 && (
+          <div className="p-4 rounded-2xl bg-white border border-[#5A5A40]/15 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] shrink-0">
+                <Activity className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="sans text-xs font-bold text-[#2D2D2D]">Último Test GAD-7</div>
+                <div className="sans text-[11px] text-[#5A5A40]">
+                  Puntaje: <span className="font-bold">{latestGad7.totalScore}/21</span> • {latestGad7.dateStr}
+                </div>
+              </div>
             </div>
-          ))}
+            <button
+              onClick={onOpenGad7Test}
+              className="text-xs font-bold text-[#5A5A40] hover:underline flex items-center gap-1 shrink-0"
+            >
+              Ver
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Weekly Mood Bar Chart - Clear & Intuitive Graphic */}
+      <div className="p-6 rounded-3xl border border-[#5A5A40]/15 bg-[#FFFDF5] soft-shadow space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#5A5A40]/10">
+          <div>
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-[#5A5A40]" />
+              <h3 className="serif text-base font-bold text-[#5A5A40]">Evolución Semanal de Bienestar</h3>
+            </div>
+            <p className="sans text-xs text-[#5A5A40]/80 mt-0.5">
+              Escala de bienestar diario de 0% (Alta Opresión) a 100% (Calma Total)
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-[#E8DCC4] text-[#5A5A40] text-xs font-bold shadow-2xs">
+              Promedio: {averageScore}% Favorable
+            </span>
+            <span className="sans text-[10px] uppercase tracking-widest text-[#5A5A40]/70 font-semibold hidden sm:inline">
+              7 días
+            </span>
+          </div>
         </div>
-        <div className="flex justify-between sans text-[9px] uppercase tracking-widest text-[#5A5A40]/60 font-bold pt-2">
-          {daysOfWeek.map((d, i) => (
-            <span key={i}>{d}</span>
-          ))}
+
+        {/* Main Graphical Canvas with Y-Axis and Bars */}
+        <div className="relative pt-6 pb-2 px-1">
+          {/* Horizontal Reference Lines (Y-Axis) */}
+          <div className="absolute inset-x-0 top-6 bottom-10 flex flex-col justify-between pointer-events-none opacity-20">
+            <div className="border-b border-[#5A5A40] w-full flex justify-between text-[9px] text-[#5A5A40] font-bold">
+              <span>100% Óptimo</span>
+            </div>
+            <div className="border-b border-dashed border-[#5A5A40] w-full flex justify-between text-[9px] text-[#5A5A40]">
+              <span>75% Favorable</span>
+            </div>
+            <div className="border-b border-dashed border-[#5A5A40] w-full flex justify-between text-[9px] text-[#5A5A40]">
+              <span>50% Moderado</span>
+            </div>
+            <div className="border-b border-[#D67C65] w-full flex justify-between text-[9px] text-[#D67C65] font-bold">
+              <span>25% Alerta</span>
+            </div>
+          </div>
+
+          {/* Bar Chart Grid */}
+          <div className="flex items-end justify-between gap-2 sm:gap-4 h-36 relative z-10 pt-2 border-b border-[#5A5A40]/20">
+            {weeklyData.map((item, idx) => {
+              const isLow = item.score < 50;
+              const isModerate = item.score >= 50 && item.score < 70;
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                  {/* Score pill on top of bar */}
+                  <span className={`text-[10px] font-extrabold mb-1 px-1.5 py-0.5 rounded-md transition-all shadow-2xs ${
+                    isLow ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                    isModerate ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                    'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  }`}>
+                    {item.score}%
+                  </span>
+
+                  {/* Vertical Bar with animation and color fill */}
+                  <div className="w-full max-w-[36px] bg-[#5A5A40]/10 rounded-t-xl overflow-hidden flex items-end h-full">
+                    <div
+                      style={{ height: `${item.score}%` }}
+                      className={`w-full rounded-t-xl transition-all duration-500 shadow-xs ${
+                        isLow ? 'bg-rose-500 group-hover:bg-rose-600' :
+                        isModerate ? 'bg-amber-500 group-hover:bg-amber-600' :
+                        'bg-emerald-600 group-hover:bg-emerald-700'
+                      }`}
+                    />
+                  </div>
+
+                  {/* Day Label & Mood Emoji Badge under bar */}
+                  <div className="mt-2 text-center">
+                    <span className="text-lg block group-hover:scale-125 transition-transform">{item.emoji}</span>
+                    <span className="sans text-[11px] font-bold text-[#2D2D2D] block leading-tight mt-0.5">
+                      {item.day}
+                    </span>
+                    <span className={`sans text-[9px] font-semibold truncate block max-w-[48px] ${item.textColor}`}>
+                      {item.moodLabel}
+                    </span>
+                  </div>
+
+                  {/* Hover Tooltip Card */}
+                  <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none w-32 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-[#2D2D2D] text-white p-2 rounded-xl text-[10px] shadow-xl text-center space-y-0.5">
+                      <p className="font-bold text-[#E8DCC4]">{item.label} ({item.date})</p>
+                      <p className="text-white/90">{item.emoji} {item.moodLabel} ({item.score}%)</p>
+                    </div>
+                    <div className="w-2 h-2 bg-[#2D2D2D] rotate-45 -mt-1" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Legend Key for Easy Understanding */}
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#5A5A40] bg-[#F5F5F0]/70 p-3 rounded-2xl border border-[#5A5A40]/10">
+          <span className="font-bold uppercase tracking-wider text-[#2D2D2D]">Clave de Interpretación:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+            <span className="font-medium">70-100%: En Calma / Favorable</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            <span className="font-medium">50-69%: Nivel Moderado</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+            <span className="font-medium">0-49%: Opresión / Ansiedad</span>
+          </div>
         </div>
       </div>
 

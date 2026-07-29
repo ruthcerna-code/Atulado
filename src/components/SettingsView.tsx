@@ -20,6 +20,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenClinicalProfile
 }) => {
   const [displayName, setDisplayName] = useState(userProfile.displayName || '');
+  const [psychologistName, setPsychologistName] = useState(userProfile.psychologistName || '');
   const [trustedName, setTrustedName] = useState(userProfile.trustedContactName || '');
   const [trustedPhone, setTrustedPhone] = useState(userProfile.trustedContactPhone || '');
   const [statusStage, setStatusStage] = useState(userProfile.pregnancyOrPostpartumStatus);
@@ -30,6 +31,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     e.preventDefault();
     onUpdateProfile({
       displayName: displayName.trim(),
+      psychologistName: psychologistName.trim(),
       trustedContactName: trustedName.trim(),
       trustedContactPhone: trustedPhone.trim(),
       pregnancyOrPostpartumStatus: statusStage,
@@ -103,6 +105,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#5A5A40]/20 text-xs focus:outline-hidden focus:border-[#5A5A40]"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-[#2D2D2D] block mb-1">
+                Psicólogo/a de Cabecera:
+              </label>
+              <input
+                type="text"
+                value={psychologistName}
+                onChange={(e) => setPsychologistName(e.target.value)}
+                placeholder="Ej: Dra. María González (Psicología Perinatal)"
                 className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#5A5A40]/20 text-xs focus:outline-hidden focus:border-[#5A5A40]"
               />
             </div>
@@ -252,7 +267,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Footer Info */}
       <div className="text-center text-[10px] text-[#5A5A40]/70 space-y-1 pt-2">
-        <p className="font-bold">A TU LADO • Dominga Care v1.0</p>
+        <p className="font-bold">A TU LADO HOY • Dominga Care v1.0</p>
         <p>Diseñado bajo Clean Architecture & Offline-First (Room + Firebase)</p>
         <p className="flex items-center justify-center gap-1">
           <ShieldCheck className="w-3 h-3 text-[#5A5A40]" />

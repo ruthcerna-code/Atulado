@@ -56,6 +56,7 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
   const [logMood, setLogMood] = useState<MoodType>('calm');
   const [logIntensity, setLogIntensity] = useState<number>(3);
   const [logNote, setLogNote] = useState<string>('');
+  const [logDaySummaryPhrase, setLogDaySummaryPhrase] = useState<string>('');
   const [logTags, setLogTags] = useState<string[]>(['#emociones']);
 
   // Breathing interactive modal state
@@ -100,12 +101,13 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
   };
 
   const moodEmojis: Record<MoodType, { emoji: string; label: string; color: string; bg: string }> = {
-    radiant: { emoji: '😊', label: 'Radiante', color: 'text-emerald-700', bg: 'bg-emerald-100 border-emerald-300' },
-    calm: { emoji: '😐', label: 'En Calma', color: 'text-teal-700', bg: 'bg-teal-100 border-teal-300' },
-    neutral: { emoji: '😶', label: 'Neutral', color: 'text-slate-700', bg: 'bg-slate-100 border-slate-300' },
-    sad: { emoji: '😔', label: 'Triste', color: 'text-amber-700', bg: 'bg-amber-100 border-amber-300' },
-    anxious: { emoji: '😰', label: 'Ansiosa', color: 'text-indigo-700', bg: 'bg-indigo-100 border-indigo-300' },
-    overwhelmed: { emoji: '😢', label: 'Abrumada', color: 'text-rose-700', bg: 'bg-rose-100 border-rose-300' }
+    angry: { emoji: '😡', label: 'Enojada', color: 'text-red-700', bg: 'bg-red-100 border-red-300' },
+    guilty: { emoji: '😔', label: 'Culposa', color: 'text-amber-800', bg: 'bg-amber-100 border-amber-300' },
+    trapped: { emoji: '🚪', label: 'Sin salida', color: 'text-purple-800', bg: 'bg-purple-100 border-purple-300' },
+    sad: { emoji: '😢', label: 'Triste', color: 'text-blue-700', bg: 'bg-blue-100 border-blue-300' },
+    overwhelmed: { emoji: '😣', label: 'Abrumada', color: 'text-orange-700', bg: 'bg-orange-100 border-orange-300' },
+    calm: { emoji: '😌', label: 'En calma', color: 'text-teal-700', bg: 'bg-teal-100 border-teal-300' },
+    anxious: { emoji: '😰', label: 'Ansiosa', color: 'text-indigo-700', bg: 'bg-indigo-100 border-indigo-300' }
   };
 
   const availableTags = ['#sueño', '#duelo', '#ansiedad', '#gratitud', '#pareja', '#lactancia', '#sobrecarga', '#fuerza'];
@@ -169,18 +171,19 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
     let totalIntensity = 0;
 
     const moodCounts: Record<MoodType, number> = {
-      radiant: 0,
-      calm: 0,
-      neutral: 0,
+      angry: 0,
+      guilty: 0,
+      trapped: 0,
       sad: 0,
-      anxious: 0,
-      overwhelmed: 0
+      overwhelmed: 0,
+      calm: 0,
+      anxious: 0
     };
 
     recentEntries.forEach((e) => {
       moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
       totalIntensity += e.intensity;
-      if (['anxious', 'overwhelmed', 'sad'].includes(e.mood) || e.intensity >= 4) {
+      if (['anxious', 'overwhelmed', 'sad', 'angry', 'guilty', 'trapped'].includes(e.mood) || e.intensity >= 4) {
         stressCount++;
       } else {
         calmCount++;
@@ -370,13 +373,16 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
       mood: logMood,
       intensity: logIntensity,
       tags: logTags,
-      note: logNote.trim() || `Registro emocional rápido del día ${selectedDateStr}`
+      note: logNote.trim() || `Registro emocional rápido del día ${selectedDateStr}`,
+      daySummaryPhrase: logDaySummaryPhrase.trim() || undefined
     });
     setActiveExerciseModal('none');
     setLogNote('');
+    setLogDaySummaryPhrase('');
   };
 
   const selectedDayEntries = entriesByDate[selectedDateStr] || [];
+  const primaryEntryForSelectedDay = selectedDayEntries[0];
 
   return (
     <div className="space-y-6 pb-24 animate-in fade-in duration-300">
@@ -550,7 +556,22 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
           </div>
 
           <button
-            onClick={() => setActiveExerciseModal('quick_log')}
+            onClick={() => {
+              if (primaryEntryForSelectedDay) {
+                setLogMood(primaryEntryForSelectedDay.mood);
+                setLogIntensity(primaryEntryForSelectedDay.intensity);
+                setLogTags(primaryEntryForSelectedDay.tags || ['#emociones']);
+                setLogNote(primaryEntryForSelectedDay.note || '');
+                setLogDaySummaryPhrase(primaryEntryForSelectedDay.daySummaryPhrase || '');
+              } else {
+                setLogMood('calm');
+                setLogIntensity(3);
+                setLogTags(['#emociones']);
+                setLogNote('');
+                setLogDaySummaryPhrase('');
+              }
+              setActiveExerciseModal('quick_log');
+            }}
             className="px-3.5 py-2 rounded-xl bg-[#E8DCC4] hover:bg-[#DDD0B7] text-[#5A5A40] font-bold text-xs transition-all flex items-center gap-1.5 shadow-2xs"
           >
             <Plus className="w-4 h-4" />
@@ -566,7 +587,7 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
                 key={e.id}
                 className="p-4 rounded-2xl bg-white border border-[#5A5A40]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{moodEmojis[e.mood]?.emoji}</span>
                     <div>
@@ -578,7 +599,17 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
                       </span>
                     </div>
                   </div>
-                  <p className="sans text-xs text-[#2D2D2D]/90 leading-relaxed bg-[#F5F5F0]/60 p-2.5 rounded-xl mt-1">
+                  {e.daySummaryPhrase && (
+                    <div className="p-2.5 rounded-xl bg-[#E8DCC4]/30 border border-[#5A5A40]/15">
+                      <span className="sans text-[10px] uppercase tracking-wider font-bold text-[#5A5A40] block mb-0.5">
+                        Resumen del día:
+                      </span>
+                      <p className="sans text-xs font-semibold text-[#2D2D2D] italic">
+                        "{e.daySummaryPhrase}"
+                      </p>
+                    </div>
+                  )}
+                  <p className="sans text-xs text-[#2D2D2D]/90 leading-relaxed bg-[#F5F5F0]/60 p-2.5 rounded-xl">
                     "{e.note}"
                   </p>
                   <div className="flex flex-wrap gap-1 pt-1">
@@ -692,7 +723,7 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
         {/* 3 Categories of Smart Suggestions */}
         <div className="space-y-4">
           <h3 className="serif text-base font-bold text-[#5A5A40] flex items-center gap-2">
-            <span>Sugerencias Personalizadas para Hoy</span>
+            <span>Recomendaciones Personalizadas para Hoy</span>
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -897,6 +928,24 @@ export const EmotionCalendarView: React.FC<EmotionCalendarViewProps> = ({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="serif text-xs font-bold text-[#5A5A40]">
+                    ¿Cómo describirías tu día hoy?
+                  </label>
+                  <span className="sans text-[10px] text-[#5A5A40]/70 font-medium">
+                    Resumen en una frase breve
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={logDaySummaryPhrase}
+                  onChange={(e) => setLogDaySummaryPhrase(e.target.value)}
+                  placeholder="Ej: Un día tranquilo donde logré hacer pausas y recargar energía..."
+                  className="w-full p-3 rounded-2xl bg-white border border-[#5A5A40]/20 text-xs focus:outline-hidden"
+                />
               </div>
 
               <div>

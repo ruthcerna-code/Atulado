@@ -6,13 +6,15 @@ import { SplashWelcomeFlow } from './components/SplashWelcomeFlow';
 import { DashboardView } from './components/DashboardView';
 import { JournalView } from './components/JournalView';
 import { EpdsView } from './components/EpdsView';
+import { Gad7View } from './components/Gad7View';
 import { BreathingView } from './components/BreathingView';
 import { LibraryView } from './components/LibraryView';
 import { CommunityView } from './components/CommunityView';
 import { ResourcesView } from './components/ResourcesView';
 import { SettingsView } from './components/SettingsView';
 import { ClinicalProfileForm } from './components/ClinicalProfileForm';
-import { UserProfile, JournalEntry, EpdsResult, MoodType, ClinicalHealthData } from './types';
+import { AdminPsychologistView } from './components/AdminPsychologistView';
+import { UserProfile, JournalEntry, EpdsResult, Gad7Result, MoodType, ClinicalHealthData } from './types';
 
 export default function App() {
   // Load saved profile or default guest
@@ -61,6 +63,7 @@ export default function App() {
         intensity: 3,
         tags: ['#sueño', '#gratitud'],
         note: 'Hoy logré descansar un par de horas seguidas. El ejercicio de respiración me ayudó mucho a relajar el pecho antes de dormir.',
+        daySummaryPhrase: 'Un día de descanso reparador y mucha calma.',
         syncedToCloud: true
       },
       {
@@ -71,6 +74,7 @@ export default function App() {
         intensity: 4,
         tags: ['#ansiedad', '#sobrecarga'],
         note: 'Sentí bastante opresión al atardecer. Llamé a mi mamá para desahogarme un rato.',
+        daySummaryPhrase: 'Un día desafiante en el que busque contención y conversación.',
         syncedToCloud: false
       },
       {
@@ -107,9 +111,20 @@ export default function App() {
     return [];
   });
 
+  // GAD-7 persistent results state
+  const [gad7Results, setGad7Results] = useState<Gad7Result[]>(() => {
+    const saved = localStorage.getItem('atulado_gad7_results');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
+
   // Navigation and Modal States
   const [activeTab, setActiveTab] = useState<'home' | 'journal' | 'community' | 'resources'>('home');
-  const [activeSubView, setActiveSubView] = useState<'none' | 'epds' | 'breathing' | 'settings' | 'clinical_profile'>('none');
+  const [activeSubView, setActiveSubView] = useState<'none' | 'epds' | 'gad7' | 'breathing' | 'settings' | 'clinical_profile' | 'admin'>('none');
   const [isSosOpen, setIsSosOpen] = useState(false);
 
   // Logout Handler (Resets auth state to return to welcome/re-entry flow)
@@ -147,6 +162,11 @@ export default function App() {
     localStorage.setItem('atulado_epds_results', JSON.stringify(epdsResults));
   }, [epdsResults]);
 
+  // Sync GAD-7 results
+  useEffect(() => {
+    localStorage.setItem('atulado_gad7_results', JSON.stringify(gad7Results));
+  }, [gad7Results]);
+
   // Handle Journal Save
   const handleSaveJournalEntry = (entryData: Omit<JournalEntry, 'id' | 'timestamp' | 'syncedToCloud'>) => {
     const newEntry: JournalEntry = {
@@ -166,7 +186,7 @@ export default function App() {
       timestamp: Date.now(),
       dateStr,
       mood,
-      intensity: mood === 'radiant' ? 5 : mood === 'calm' ? 3 : 4,
+      intensity: mood === 'calm' ? 2 : mood === 'anxious' || mood === 'overwhelmed' || mood === 'angry' ? 4 : 3,
       tags: ['#checkin_rapido'],
       note: `Check-in rápido de estado emocional: ${mood}`,
       syncedToCloud: userProfile.syncEnabled
@@ -180,6 +200,10 @@ export default function App() {
 
   const handleSaveEpds = (result: EpdsResult) => {
     setEpdsResults([result, ...epdsResults]);
+  };
+
+  const handleSaveGad7 = (result: Gad7Result) => {
+    setGad7Results([result, ...gad7Results]);
   };
 
   // Onboarding Complete Handler
@@ -243,13 +267,29 @@ export default function App() {
         activeTab={activeTab}
         onOpenSettings={() => setActiveSubView('settings')}
         onOpenClinicalProfile={() => setActiveSubView('clinical_profile')}
+        onOpenAdmin={() => setActiveSubView('admin')}
         onLogout={handleLogout}
       />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 pt-5 pb-20">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-5 pb-20">
         {/* Render Active View or Subview */}
-        {activeSubView === 'clinical_profile' ? (
+        {activeSubView === 'admin' ? (
+          <div className="space-y-4">
+            <button
+              onClick={() => setActiveSubView('none')}
+              className="text-xs font-bold text-[#5A5A40] hover:underline mb-2 flex items-center gap-1"
+            >
+              ← Volver al Dashboard
+            </button>
+            <AdminPsychologistView
+              currentUserProfile={userProfile}
+              currentUserEntries={journalEntries}
+              currentUserEpds={epdsResults}
+              currentUserGad7={gad7Results}
+            />
+          </div>
+        ) : activeSubView === 'clinical_profile' ? (
           <div className="space-y-4">
             <button
               onClick={() => setActiveSubView('none')}
@@ -305,6 +345,20 @@ export default function App() {
               onOpenSos={() => setIsSosOpen(true)}
             />
           </div>
+        ) : activeSubView === 'gad7' ? (
+          <div className="space-y-4">
+            <button
+              onClick={() => setActiveSubView('none')}
+              className="text-xs font-bold text-[#5A5A40] hover:underline mb-2 flex items-center gap-1"
+            >
+              ← Volver al Dashboard
+            </button>
+            <Gad7View
+              onSaveResult={handleSaveGad7}
+              onOpenSos={() => setIsSosOpen(true)}
+              onBackToDashboard={() => setActiveSubView('none')}
+            />
+          </div>
         ) : activeSubView === 'breathing' ? (
           <div className="space-y-4">
             <button
@@ -323,10 +377,12 @@ export default function App() {
                 userProfile={userProfile}
                 recentEntries={journalEntries}
                 latestEpds={epdsResults[0]}
+                latestGad7={gad7Results[0]}
                 onQuickMoodCheckin={handleQuickMoodCheckin}
                 onOpenBreathing={() => setActiveSubView('breathing')}
                 onNavigateTab={(tab) => setActiveTab(tab)}
                 onOpenEpdsTest={() => setActiveSubView('epds')}
+                onOpenGad7Test={() => setActiveSubView('gad7')}
                 onOpenSos={() => setIsSosOpen(true)}
                 onOpenClinicalProfile={() => setActiveSubView('clinical_profile')}
               />

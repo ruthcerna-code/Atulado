@@ -1,4 +1,11 @@
-export type MoodType = 'radiant' | 'calm' | 'neutral' | 'sad' | 'anxious' | 'overwhelmed';
+export type MoodType =
+  | 'angry'
+  | 'guilty'
+  | 'trapped'
+  | 'sad'
+  | 'overwhelmed'
+  | 'calm'
+  | 'anxious';
 
 export interface MoodOption {
   id: MoodType;
@@ -15,6 +22,7 @@ export interface JournalEntry {
   intensity: number; // 1 to 5
   tags: string[];
   note: string;
+  daySummaryPhrase?: string; // "¿Cómo describirías tu día hoy?"
   photoUrl?: string;
   syncedToCloud: boolean;
 }
@@ -35,6 +43,24 @@ export interface EpdsResult {
   totalScore: number;
   item10Score: number; // Self-harm risk item
   riskLevel: 'low' | 'moderate' | 'high';
+  notes?: string;
+}
+
+export interface Gad7Question {
+  id: number;
+  question: string;
+  options: {
+    text: string;
+    score: number;
+  }[];
+}
+
+export interface Gad7Result {
+  id: string;
+  timestamp: number;
+  dateStr: string;
+  totalScore: number; // 0 to 21
+  riskLevel: 'minimal' | 'mild' | 'moderate' | 'severe';
   notes?: string;
 }
 
@@ -87,6 +113,11 @@ export interface ClinicalHealthData {
   cycleDurationDays: number;
   contraceptiveMethod: string;
   healthConditions: string[]; // e.g. ['Diabetes', 'Obesidad', 'Celíaca', 'Depresión']
+  otherHealthConditions?: string; // Campo adicional para otros tipos de condiciones
+  diagnosedDisease?: string; // Texto largo (máx 150 caracteres)
+  medications?: string; // Medicamentos
+  medicationDurationValue?: number | string; // Duración
+  medicationDurationUnit?: 'días' | 'meses'; // días o meses
 }
 
 export interface UserProfile {
@@ -97,6 +128,7 @@ export interface UserProfile {
   pregnancyOrPostpartumStatus: 'gestational' | 'postpartum' | 'grief_loss' | 'seeking';
   trustedContactName?: string;
   trustedContactPhone?: string;
+  psychologistName?: string; // Nombre del psicólogo de cabecera
   hasConsented: boolean;
   syncEnabled: boolean;
   clinicalProfile?: ClinicalHealthData;

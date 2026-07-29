@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, ShieldCheck, UserCheck, Settings as SettingsIcon, Cloud, CloudOff, LogOut, Activity } from 'lucide-react';
+import { Heart, ShieldCheck, UserCheck, Settings as SettingsIcon, Cloud, CloudOff, LogOut, Activity, Users } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface NavbarProps {
@@ -7,6 +7,7 @@ interface NavbarProps {
   activeTab: string;
   onOpenSettings: () => void;
   onOpenClinicalProfile?: () => void;
+  onOpenAdmin?: () => void;
   onLogout?: () => void;
 }
 
@@ -14,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   userProfile,
   onOpenSettings,
   onOpenClinicalProfile,
+  onOpenAdmin,
   onLogout
 }) => {
   return (
@@ -25,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="serif text-lg font-bold tracking-tight text-[#5A5A40]">A TU LADO</span>
+            <span className="serif text-lg font-bold tracking-tight text-[#5A5A40]">A TU LADO HOY</span>
             <span className="hidden sm:inline-block text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#E8DCC4] text-[#5A5A40] font-semibold">
               Dominga Care
             </span>
@@ -68,6 +70,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
         </div>
+
+        {/* Admin / Psicólogo Portal button */}
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="px-2.5 py-1.5 rounded-full bg-[#5A5A40] hover:bg-[#484833] text-white transition-all text-xs font-bold flex items-center gap-1.5 shadow-2xs active:scale-95"
+            title="Administración / Portal Psicólogos"
+            aria-label="Administración Psicólogos"
+          >
+            <Users className="w-3.5 h-3.5 text-[#E8DCC4]" />
+            <span className="hidden sm:inline">Administración</span>
+          </button>
+        )}
 
         {/* Clinical Profile Shortcut button */}
         {onOpenClinicalProfile && (
